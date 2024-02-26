@@ -52,5 +52,95 @@ As you can see, In VM3 it has a task/thread-9 where it's not yet allocated to an
 **Note: We can't have more than the count of physical-CPU to any individual VM.**
 
 
+# Hypervisor networking:
 
+> Ofcourse, We have OSI (Open Systems Interconnection) model concept at the begining when we discuss about networking in technical sense.
+
+![alt text](assets/osi_model.png)
+
+**Note:**
+- Layer 1 (Physical): This is the elctrons, wires/fibers, swtich ports and network adapters things.
+
+- Layer 2 (Data Link): In hyper-v world, it's going to be Ethernet. Where we talk in <span style="color:green">**Frames**</span>
+
+![alt text](assets/frames_concepts.png)
+
+    -->  It starts with header, ends with validation bits.
+    --> It only cares about the ordering of incoming/outgoing bits.
+    --> Ofcourse, Destination and Source MAC address.
+    --> Yes, VLANs details could be found at Layer 2 or 3. The above layers doesn't know or care about this.
+    --> Payload contains, TCP/IP packet or IPX/SPX packet or NetBEUI packet or anything. 
+    --> All ethernet is cares about is the destination MAC address. Once the frame is delivered, layer 2 will unpackage the packet and deliver it up to layer 3 to deal with.
+
+
+- Layer 3 (Network): This is where we talk about TCP/IP protocols. In Hypervisors at this level, we have <span style="color:green">Virtual Network Adapter</span>. Where, it connects to Hypervisors virtual switch into the layer three world of the management OS.
+    
+    <span style="color:red">Note:  Hence,  virtual switch and virtual adapters are in layer 1 and 2.</span>
+
+- Layer 4 (Transport): This is where we mostly talk about TCP/IP stack, **TCP** and **UDP**.
+   
+
+
+ > With this the best summary of the process described by the OSI model is that networking is a series of **encapsulation**. 
+
+![alt text](assets/osi_encapsulation.png)
+
+
+
+> Finally after going through the OSI model, We came up with **Virtual Switch** and **Virtual Network Adapter** in respect with hypervisor networking pov.
+
+
+### Virtual Swtich
+Virtual switch that becomes important aspects when we compares it with physical switches, where it behave in the same way and directs the packets to MAC addresses along with VLAN tagging.
+
+Types of virtual switch:
+- private v-swtich
+- internal v-swtich
+- public v-swtich
+
+
+
+#### Private Swtich:
+- It allows the communications among the virtual machines on its host and nothing else.
+- Even, management os is not allowed to participate.
+
+#### Internal switch:
+- similiar to private with one exception.
+   exception:**The management OS can have virtual adapter on this type of switch**.
+- This allows management os to communicate to any VMs that also have virtual adapters on the same internal switch.
+
+#### External Switch:
+- This must be connected to a physical adapter. 
+- It allows communications between the physical network and the management operating system and virtual adapters on virtual machines.
+
+
+> Now, Let's see how overall networking looks like in hypervisor.
+
+![virtual-switch](assets/virtual-switch.png)
+
+
+Now, In realtime let's dig further into network adapters.
+
+let's take an example of locally operating into virtualbox's networking settings,
+
+![alt text](assets/vb_network_settings.png)
+
+So, we have various options while enabling network adapter for a virtual machine. As below,
+
+* NAT
+* Bridged Adapter
+* Internal Network
+* Host-only Adapter
+* Generic Driver
+* NAT Network
+* Cloud Network(Experimental)
+
+
+| Mode              | VM <-> VM | VM -> Host | Host -> VM | VM -> Physical LAN | Physical LAN -> VM |
+| ---------------   | --------- | ---------- | ----------- | ------------------- | --------------------|
+| NAT               | -         | +          | Port-Forward| Yes                 | Port-Forward        |
+| Bridged Adapter   | +         | +          | +           | +                   |  +                  |
+| Internal Network  | +         | -          | -           | -                   |  -                  |
+| Host-only Adapter | +         | +          | +           | -                   |  -                  |
+| NAT network       | +         | +          | Port-Forward| +                   | Port-Forward        |
 
